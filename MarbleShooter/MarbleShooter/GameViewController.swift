@@ -16,7 +16,29 @@ class GameViewController: UIViewController {
     var level: Level!
     
     override func viewDidLoad() {
+        
         super.viewDidLoad()
+        //JONS CODE
+        if let view = self.view as! SKView? {
+            // Load the SKScene from 'GameScene.sks'
+            if let scene = SKScene(fileNamed: "GameScene") {
+                // Set the scale mode to scale to fit the window
+                scene.scaleMode = .aspectFill
+                
+                let transition = SKTransition.fade(withDuration: 3)
+                // Present the scene
+                view.presentScene(scene, transition: transition)
+            }
+            
+            view.ignoresSiblingOrder = true
+            //GOOD FOR VIEWING THE PHYZICZ
+            //view.showsPhysics = true
+            
+            view.showsFPS = true
+            view.showsNodeCount = true
+        }
+        //SAMS CODE
+        /*
         
         // Configure the view.
         let skView = view as! SKView
@@ -33,16 +55,16 @@ class GameViewController: UIViewController {
         //scene.addTiles()
         skView.presentScene(scene)
         
-        beginGame()
+        beginGame()*/
     }
     
     func beginGame() {
-        shuffle()
+        //shuffle()
     }
     
     func shuffle() {
         let newBalls = level.shuffle()
-        scene.addSprites(for: newBalls)
+       // scene.addSprites(for: newBalls)
     }
 
     override var shouldAutorotate: Bool {
