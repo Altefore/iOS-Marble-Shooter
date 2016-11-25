@@ -10,11 +10,37 @@ import SpriteKit
 import GameplayKit
 
 
+/* TODO:
+ create game states,
+ boolean for ball being shot,
+ create queue for random balls
+ Change the points and positions to fit frame
+ 
+ */
+
+/*NOTES
+ Offset for Y position increment = 51
+ 
+ 
+ */
+
 var tapQueue = [Int]()
 
+let RedBallCategoryName = "redBall"
+let GreenBallCategoryName = "greenBall"
+let YellowBallCategoryName = "yellowBall"
+let OrangeBallCategoryName = "orangeBall"
+let BlueBallCategoryName = "blueBall"
+let CyanBallCategoryName = "tealBall"
+let PurpleBallCategoryName = "purpleBall"
+let CannonCategoryName = "cannon"
+let GameMessageCategoryName = "gameMessage"
+let ScoreLabelCategoryName = "label"
+let PauseButtonCategoryName = "pauseButton"
 
-let ShootingBallCategory   : UInt32 = 0x1 << 0
-let BallCategory           : UInt32 = 0x1 << 1
+let ShootingCatagoryName = "shootingMarble"
+let StasisCatagoryName = "stasisMarble"
+
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
@@ -26,51 +52,431 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let TileWidth: CGFloat = 37.0
     let TileHeight: CGFloat = 40.0
     
+    
     let gameLayer = SKNode()
     let ballsLayer = SKNode()
     
-    override init(size: CGSize) {
-        super.init(size: size)
-        
-        anchorPoint = CGPoint(x: 0.94, y: 0.905)
-        
-        // Put an image on the background. Because the scene's anchorPoint is
-        // (0.5, 0.5), the background image will always be centered on the screen.
-        //let background = SKSpriteNode(imageNamed: "Background")
-        //background.size = size
-        //addChild(background)
-        self.scene?.backgroundColor = SKColor.white
-        // Add a new node that is the container for all other layers on the playing
-        // field. This gameLayer is also centered in the screen.
-        addChild(gameLayer)
-        
-        let layerPosition = CGPoint(
-            x: -TileWidth * CGFloat(NumColumns),// / 2,
-            y: -TileHeight * CGFloat(NumRows))   // / 2)
-        
-        // The tiles layer represents the shape of the level. It contains a sprite
-        // node for each square that is filled in.
-        //tilesLayer.position = layerPosition
-        //gameLayer.addChild(tilesLayer)
-        
-        // This layer holds the ball sprites. The positions of these sprites
-        // are relative to the ballsLayer's bottom-left corner.
-        ballsLayer.position = layerPosition
-        
-        gameLayer.addChild(ballsLayer)
+//Jons Code
+    
+    //Contact  CategoryMasks
+    let ShootingBallCategory: UInt32 = 0x1 << 0
+    let StasisCategory      : UInt32 = 0x1 << 1
+    let FallingCategory     : UInt32 = 0x1 << 2
+    let HoleBottomCategory  : UInt32 = 0x1 << 3
+    let BottomCategory      : UInt32 = 0x1 << 4
+    let CeilingCategory     : UInt32 = 0x1 << 5
+    
+    let marbleWidth = SKSpriteNode(imageNamed: "redBall").size.width
+    
+    let yOffset = CGFloat(51.0)
+    let xOffset = CGFloat(30.0)
+     
+    let marbleCatagoryNameList = [RedBallCategoryName,GreenBallCategoryName, YellowBallCategoryName,
+     OrangeBallCategoryName, BlueBallCategoryName, CyanBallCategoryName, PurpleBallCategoryName]
+     
+    var gamePaused = false
+    var readyToShoot = true
+ 
+//Jons Code End
+    
+//    
+//    override init(size: CGSize) {
+//        super.init(size: size)
+//        
+//        anchorPoint = CGPoint(x: 0.94, y: 0.905)
+//        
+//        // Put an image on the background. Because the scene's anchorPoint is
+//        // (0.5, 0.5), the background image will always be centered on the screen.
+//        //let background = SKSpriteNode(imageNamed: "Background")
+//        //background.size = size
+//        //addChild(background)
+//        self.scene?.backgroundColor = SKColor.white
+//        // Add a new node that is the container for all other layers on the playing
+//        // field. This gameLayer is also centered in the screen.
+//        addChild(gameLayer)
+//        
+//        let layerPosition = CGPoint(
+//            x: -TileWidth * CGFloat(NumColumns),// / 2,
+//            y: -TileHeight * CGFloat(NumRows))   // / 2)
+//        
+//        // The tiles layer represents the shape of the level. It contains a sprite
+//        // node for each square that is filled in.
+//        //tilesLayer.position = layerPosition
+//        //gameLayer.addChild(tilesLayer)
+//        
+//        // This layer holds the ball sprites. The positions of these sprites
+//        // are relative to the ballsLayer's bottom-left corner.
+//        ballsLayer.position = layerPosition
+//        
+//        gameLayer.addChild(ballsLayer)
 
+
+/* Not sure we need this
         let cannonSprite = SKSpriteNode(imageNamed: "cannonSprite.png")
         cannonSprite.size = CGSize(width: 180, height: 185)
         cannonSprite.position = CGPoint(x:-165, y:-550.0)
         cannonSprite.zPosition = 2
         gameLayer.addChild(cannonSprite)
+
+*/
+//    }
+    
+//    required init?(coder aDecoder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+    
+//Jons Code Begin
+    
+    override func didMove(to view: SKView) {
+        super.didMove(to: view)
+        
+        print("FRAME MAX X = \(frame.maxY)")
+        
+        
+        let borderBody = SKPhysicsBody(edgeLoopFrom: frame)
+        borderBody.friction = 0
+        borderBody.restitution = 1
+        self.physicsBody = borderBody
+        
+        physicsWorld.gravity = CGVector(dx: 0, dy: 0)
+        physicsWorld.contactDelegate = self
+        //
+        //ball.physicsBody!.contactTestBitMask = BottomCategory
+        
+        
+        
+        //addChild(shootingMarble)
+        
+        let leftRect = CGRect(x: -345, y: -613.5, width: 1, height: 1227)
+        let left = SKNode()
+        left.physicsBody = SKPhysicsBody(edgeLoopFrom: leftRect)
+        addChild(left)
+        //        let bottomRect = CGRect(x: frame.minX, y: frame.minY, width: frame.size.width, height: 1)
+        //        let bottom = SKNode()
+        //        bottom.physicsBody = SKPhysicsBody(edgeLoopFrom: bottomRect)
+        //        addChild(bottom)
+        //
+        //        let ceilingRect = CGRect(x: frame.minX, y: frame.maxY, width: frame.size.width, height: 1)
+        //        let ceiling = SKNode()
+        //        ceiling.physicsBody = SKPhysicsBody(edgeLoopFrom: ceilingRect)
+        //        addChild(ceiling)
+        //
+        //bottom.physicsBody!.categoryBitMask = BottomCategory
+        //        ceiling.physicsBody!.categoryBitMask = CeilingCategory
+        //
+        //        newShootingMarble()
+        //
+        spawnMarbles()
+        newGameClassic()
+        
         
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func newGameClassic(){
+        newShootingMarble()
     }
+    
+    
+    func newShootingMarble(){
+        
+        let rand = getRandomNumber(number: 7)
+        
+        let shootingMarble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
+        shootingMarble.position = shootingPosition
+        print("Marble Texture = \(shootingMarble.texture)")
+        shootingMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2, center: shootingMarble.position)
+        //        shootingMarble.physicsBody!.contactTestBitMask = StasisCategory
+        //        shootingMarble.physicsBody!.contactTestBitMask = CeilingCategory
+        
+        shootingMarble.zPosition = 2
+        
+        shootingMarble.physicsBody!.categoryBitMask = ShootingBallCategory
+        
+        
+        shootingMarble.physicsBody!.allowsRotation = false
+        shootingMarble.physicsBody!.friction = 0.0
+        shootingMarble.physicsBody!.affectedByGravity = true
+        shootingMarble.physicsBody!.isDynamic = false
+        shootingMarble.name = ShootingCatagoryName//marbleCatagoryNameList[rand]
+        shootingMarble.physicsBody!.categoryBitMask = ShootingBallCategory
+        shootingMarble.zPosition = 2
+        //shootingMarble.physicsBody!.applyForce(CGVector(dx: 0.0, dy: 10.0))
+        addChild(shootingMarble)
+        readyToShoot = true
+        
+    }
+    
+    func shootMarble(atPoint pos : CGPoint){
+        if readyToShoot {
+            if let shootingMarble = childNode(withName: ShootingCatagoryName) as! SKSpriteNode?{
+                //                shootingMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2, center: shootingMarble.position) this one is incorrect
+                shootingMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
+                shootingMarble.physicsBody!.categoryBitMask = ShootingBallCategory
+                shootingMarble.physicsBody!.friction = 0
+                shootingMarble.physicsBody!.restitution = 1
+                shootingMarble.physicsBody!.linearDamping = 0
+                shootingMarble.physicsBody!.angularDamping = 0
+                let x = (pos.x)
+                let y = (pos.y) - shootingPosition.y
+                let hypotenus = sqrt(x*x + y*y)
+                //Default Speed 150.0
+                let xVector = (x/hypotenus)*100.0
+                let yVector = (y/hypotenus)*100.0
+                if yVector > 0 {
+                    shootingMarble.physicsBody!.applyImpulse(CGVector(dx: xVector, dy: yVector))
+                    readyToShoot = false
+                }
+            }
+        }
+        else {
+            if let node = childNode(withName: ShootingCatagoryName) as! SKSpriteNode?{
+                node.removeFromParent()
+            }
+            newShootingMarble()
+        }
+    }
+    
+    
+    func touchDown(atPoint pos : CGPoint) {
+        //                if let n = self.spinnyNode?.copy() as! SKShapeNode? {
+        //                    n.position = pos
+        //                    n.strokeColor = SKColor.green
+        //                    self.addChild(n)
+        //                }
+    }
+    
+    func touchMoved(toPoint pos : CGPoint) {
+        //        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
+        //            n.position = pos
+        //            n.strokeColor = SKColor.blue
+        //            self.addChild(n)
+        //        }
+    }
+    
+    func touchUp(atPoint pos : CGPoint) {
+        //this creates a new node and we dont want that. we want to use the existing shootingMarbleNode
+        shootMarble(atPoint: pos)
+        
+        
+        //        if waitingToShoot {
+        //            //let shootingMarble = self.childNode(withName: ShootingCatagoryName) as! SKSpriteNode
+        //            let shootingMarble = self.childNode(withName: "redBall") as! SKSpriteNode
+        //
+        //            shootingMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2, center: shootingMarble.position)
+        //            shootingMarble.physicsBody!.categoryBitMask = ShootingBallCategory
+        //
+        //
+        //            shootingMarble.physicsBody!.allowsRotation = false
+        //            shootingMarble.physicsBody!.friction = 0.0
+        //            shootingMarble.physicsBody!.affectedByGravity = false
+        //            //shootingMarble.physicsBody!.isDynamic = false
+        //            let x = (pos.x)
+        //            let y = (pos.y) - shootingPosition.y
+        //            let hypotenus = sqrt(x*x + y*y)
+        //            let xVector = (x/hypotenus)*150.0
+        //            let yVector = (y/hypotenus)*150.0
+        //            shootingMarble.physicsBody!.applyImpulse(CGVector(dx: xVector, dy: yVector))
+        //            //shootingMarble.position = pos
+        ////            shootingMarble.physicsBody!.velocity.dx = xVector
+        ////            shootingMarble.physicsBody!.velocity.dy = yVector
+        //            print("Shooting Marble Color: \(shootingMarble.texture)")
+        //        }
+        
+        
+        
+    }
+    
+    func freezeShootingMarble(freezePosition: CGPoint){
+        
+        if let marble = childNode(withName: ShootingCatagoryName) as! SKSpriteNode?{
+            //            let newStasisMarble = childNode(withName: StasisCatagoryName) as! SKSpriteNode
+            //            newStasisMarble.texture = shootingMarble.texture
+            //            newStasisMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
+            
+            let newPosition : CGPoint = fitMarbleToGrid(contactPoint: freezePosition)
+            
+            marble.position = newPosition
 
+            
+            marble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
+            marble.physicsBody!.allowsRotation = false
+            marble.physicsBody!.friction = 0.0
+            marble.physicsBody!.affectedByGravity = true
+            marble.physicsBody!.isDynamic = false
+            
+
+            
+            
+            marble.name = StasisCatagoryName
+            marble.physicsBody!.categoryBitMask = StasisCategory
+            marble.physicsBody!.contactTestBitMask = ShootingBallCategory
+            
+            
+            //print("Shooting Marble Location = \(shootingMarble.position)")
+            //newStasisMarble.position = shootingMarble.position
+            //breakMarble(node: shootingMarble)
+            //shootingMarble.physicsBody!.velocity.dx = 0
+            //shootingMarble.physicsBody!.velocity.dx = 0
+        }
+        
+    }
+    
+    func fitMarbleToGrid(contactPoint: CGPoint) -> CGPoint {
+        let spawnStartPosition: CGPoint = CGPoint(x: frame.minX + marbleWidth, y: frame.maxY - marbleWidth)
+        var newPosition : CGPoint = contactPoint
+       
+        //makes the math easier
+        var yPos = contactPoint.y - frame.maxY
+        var xPos = contactPoint.x + frame.maxX
+        
+        //calculate closest yPos
+        yPos = (floor((yPos + marbleWidth)/yOffset) - 1)*yOffset - marbleWidth/2
+        yPos += frame.maxY
+        newPosition.y = yPos
+        
+        //calculate closest xPos
+        //TODO: use the yposition to determine offset rows
+        if ((xPos.truncatingRemainder(dividingBy: xOffset)) <= 15){
+            xPos -= xOffset
+        }
+        else {
+            xPos += xOffset
+
+        }
+        xPos -= frame.maxX
+        newPosition.x = xPos
+        
+        return newPosition
+        
+    }
+    
+    func breakMarble(node: SKNode) {
+        
+        //if gameState.currentState is Playing {
+        //self.score += 10
+        //let particles = SKEmitterNode(fileNamed: "BrokenPlatform")!
+        //particles.position = node.position
+        //particles.zPosition = 3
+        //addChild(particles)
+        //particles.run(SKAction.sequence([SKAction.wait(forDuration: 1.0),
+        //SKAction.removeFromParent()]))
+        //}
+        node.removeFromParent()
+    }
+    
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        // 1
+        var firstBody: SKPhysicsBody
+        var secondBody: SKPhysicsBody
+        // 2
+        if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
+            firstBody = contact.bodyA
+            secondBody = contact.bodyB
+        } else {
+            firstBody = contact.bodyB
+            secondBody = contact.bodyA
+        }
+        // 3
+        if firstBody.categoryBitMask == ShootingBallCategory && secondBody.categoryBitMask == BottomCategory {
+            print("Hit ceiling. First contact has been made.")
+        }
+        if firstBody.categoryBitMask == ShootingBallCategory && secondBody.categoryBitMask == StasisCategory {
+            print("Hit marble secondBody \(secondBody.node!.position)")
+            //print("Hit marble firstBody \(firstBody.node!.position)")
+            freezeShootingMarble(freezePosition: secondBody.node!.position)
+            
+        }
+        else {
+            print("first body: \(firstBody)")
+            print("secondBody : \(secondBody)")
+        }
+    }
+    
+    
+    
+    func getRandomNumber(number: UInt32) -> Int{
+        let rand = Int(arc4random_uniform(number))
+        return rand
+    }
+    
+    func spawnMarbles(){
+        let numberOfMarbles = 77
+        //Should change this to fit the frame
+        let spawnStartPosition: CGPoint = CGPoint(x: frame.minX + marbleWidth/2, y: frame.maxY - marbleWidth/2)
+        let startPositionX = spawnStartPosition.x//CGFloat(-315.0)
+        let startPositionY = spawnStartPosition.y//CGFloat(583.5)
+        var row = -1
+        
+        
+        for i in 0..<numberOfMarbles {
+            if ((i)%11 == 0){
+                row += 1
+            }
+            let rand = getRandomNumber(number: 7)
+            let marble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
+            if (row % 2 == 0) {
+                marble.position = CGPoint(x: startPositionX + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
+            }
+            else{
+                marble.position = CGPoint(x: startPositionX + xOffset + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
+            }
+            marble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
+            marble.physicsBody!.allowsRotation = false
+            marble.physicsBody!.friction = 0.0
+            marble.physicsBody!.affectedByGravity = true
+            marble.physicsBody!.isDynamic = false
+            marble.name = StasisCatagoryName
+            marble.physicsBody!.categoryBitMask = StasisCategory
+            marble.physicsBody!.contactTestBitMask = ShootingBallCategory
+            marble.zPosition = 2
+            addChild(marble)
+            //print("Row = \(row)")
+        }
+        
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //        if let label = self.label {
+        //            label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
+        //        }
+        //
+        //        for t in touches { self.touchDown(atPoint: t.location(in: self)) }
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //        for t in touches { self.touchMoved(toPoint: t.location(in: self)) }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let touch = touches.first
+        let touchLocation = touch!.location(in: self)
+        
+        if let body = physicsWorld.body(at: touchLocation) {
+            if body.node!.name == PauseButtonCategoryName {
+                print("PauseButtonTouched")
+                gamePaused = true
+            }
+        }
+        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
+    }
+    
+    
+    override func update(_ currentTime: TimeInterval) {
+        // Called before each frame is rendered
+    }
+}
+
+
+//Jons Code End
+    
+
+
+/*
     func addSprites(for balls: Set<Ball>) {
         for ball in balls {
             let sprite = SKSpriteNode(imageNamed: ball.ballType.spriteName)
@@ -162,4 +568,4 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
     }
-}
+}*/

@@ -10,6 +10,7 @@ import UIKit
 
 class GameModesViewController: UIViewController {
 
+    //CHANGING TO "PRESENT AS POPOVER SEGUE" FROM "SHOW SEGUE TO"
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.title = "Game Modes"
