@@ -79,7 +79,7 @@ class Level {
         assert(row >= 0 && row < NumRows)
         return slots[column, row]
     }
-    
+    /*
     //check if there is a chain of same colored balls
     private func hasChainAt(column: Int, row: Int) -> Bool {
         let ballType = balls[column, row]!.ballType
@@ -198,7 +198,7 @@ class Level {
                 balls[ball.column, ball.row] = nil
             }
         }
-    }
+    }*/
 }
 
 
