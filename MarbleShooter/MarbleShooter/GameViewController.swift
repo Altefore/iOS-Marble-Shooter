@@ -66,6 +66,14 @@ class GameViewController: UIViewController {
         let newBalls = level.shuffle()
        // scene.addSprites(for: newBalls)
     }
+    
+     func handleMatches() {
+        let chains = level.removeMatches()
+        
+        /*scene.animateMatchedBalls(for: chains) {
+            self.view.isUserInteractionEnabled = true
+        }*/
+    }
 
     override var shouldAutorotate: Bool {
         return false
