@@ -16,7 +16,7 @@ import GameplayKit
  create queue for random balls
  Change the points and positions to fit frame
  
- */
+*/
 
 /*NOTES
  Offset for Y position increment = 51
@@ -43,6 +43,8 @@ let StasisCatagoryName = "stasisMarble"
 
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    //might need to delete this.
+    fileprivate var balls = Matrix<Ball>(columns: NumColumns, rows: NumRows)
     
     var level: Level!
     
@@ -406,10 +408,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let spawnStartPosition: CGPoint = CGPoint(x: frame.minX + marbleWidth/2, y: frame.maxY - marbleWidth/2)
         let startPositionX = spawnStartPosition.x//CGFloat(-315.0)
         let startPositionY = spawnStartPosition.y//CGFloat(583.5)
-        var row = -1
-        
-        
-        for i in 0..<numberOfMarbles {
+        //var row = -1
+        var i = -1
+        //NumRow and NumColumns come from Level.swift
+        for row in 0..<NumRows {
+            for column in 0..<NumColumns {
+                i += 1
+                //let rand = getRandomNumber(number: 7)
+                var ballType = BallType.random()
+                let ball = Ball(column: column, row: row, ballType: ballType)
+                ball.sprite = SKSpriteNode(imageNamed: ball.ballType.spriteName)
+                let marble = ball.sprite
+                balls[column, row] = ball
+                //let marble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
+                if (row % 2 == 0) {
+                    marble?.position = CGPoint(x: startPositionX + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
+                }
+                else{
+                    marble?.position = CGPoint(x: startPositionX + xOffset + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
+                }
+                marble?.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
+                marble?.physicsBody!.allowsRotation = false
+                marble?.physicsBody!.friction = 0.0
+                marble?.physicsBody!.affectedByGravity = true
+                marble?.physicsBody!.isDynamic = false
+                marble?.name = StasisCatagoryName
+                marble?.physicsBody!.categoryBitMask = StasisCategory
+                marble?.physicsBody!.contactTestBitMask = ShootingBallCategory
+                marble?.zPosition = 2
+                addChild(marble!)
+                
+            }
+        }
+        /*for i in 0..<numberOfMarbles {
             if ((i)%11 == 0){
                 row += 1
             }
@@ -432,7 +463,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             marble.zPosition = 2
             addChild(marble)
             //print("Row = \(row)")
-        }
+        }*/
         
     }
     
