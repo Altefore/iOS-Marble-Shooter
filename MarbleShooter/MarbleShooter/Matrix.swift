@@ -11,13 +11,13 @@ struct Matrix<T> {
     let rows: Int
     fileprivate var array: Array<T?>
     
-    init(columns: Int, rows: Int) {
+    init(rows: Int, columns: Int) {
         self.columns = columns
         self.rows = rows
         array = Array<T?>(repeating: nil, count: rows*columns)
     }
     
-    subscript(column: Int, row: Int) -> T? {
+    subscript(row: Int, column: Int) -> T? {
         get {
             return array[row*columns + column]
         }

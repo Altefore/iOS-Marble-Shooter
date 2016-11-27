@@ -63,7 +63,7 @@ class GameViewController: UIViewController {
     }
     
     func shuffle() {
-        let newBalls = level.shuffle()
+        //let newBalls = level.shuffle()
        // scene.addSprites(for: newBalls)
     }
     
