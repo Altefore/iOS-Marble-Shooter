@@ -42,6 +42,8 @@ enum BallType: Int, CustomStringConvertible {
 class Ball: CustomStringConvertible, Hashable{
     var column: Int
     var row: Int
+    var offset: Bool
+    var position: CGPoint
     let ballType: BallType
     var sprite: SKSpriteNode?
     
@@ -51,13 +53,15 @@ class Ball: CustomStringConvertible, Hashable{
     }
     
     var description: String {
-        return "type:\(ballType) square:(\(column),\(row))"
+        return "type:\(ballType) square:(\(row),\(column)) position:\(position) "
     }
     
-    init(column: Int, row: Int, ballType: BallType) {
+    init(row: Int, column: Int, offset: Bool, ballType: BallType, position: CGPoint) {
         self.column = column
         self.row = row
+        self.offset = offset
         self.ballType = ballType
+        self.position = position
     }
 }
 //for comparing two objects of the same type required by Hashable protocol

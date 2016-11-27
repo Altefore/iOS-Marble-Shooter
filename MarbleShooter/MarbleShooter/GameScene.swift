@@ -41,10 +41,11 @@ let PauseButtonCategoryName = "pauseButton"
 let ShootingCatagoryName = "shootingMarble"
 let StasisCatagoryName = "stasisMarble"
 
+var marbleCounter = 0
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     //might need to delete this.
-    fileprivate var balls = Matrix<Ball>(columns: NumColumns, rows: NumRows)
+    fileprivate var balls = Matrix<Ball>(rows: NumRows, columns: NumColumns)
     
     var level: Level!
     
@@ -178,6 +179,59 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         newShootingMarble()
     }
     
+    func spawnMarbles(){
+        let numberOfMarbles = NumRows * NumColumns
+        
+        //Should change this to fit the frame
+        let spawnStartPosition: CGPoint = CGPoint(x: frame.minX + marbleWidth/2, y: frame.maxY - marbleWidth/2)
+        let startPositionX = spawnStartPosition.x//CGFloat(-315.0)
+        let startPositionY = spawnStartPosition.y//CGFloat(583.5)
+        //var row = -1
+        var offset: Bool
+        var i = -1
+        //NumRow and NumColumns come from Level.swift
+        for row in 0..<NumRows {
+            for column in 0..<NumColumns {
+                i += 1
+                //let rand = getRandomNumber(number: 7)
+                var ballType = BallType.random()
+                if(row % 2 == 0){
+                    offset = false
+                }
+                else {
+                    offset = true
+                }
+                let ball = Ball( row: row, column: column, offset: offset, ballType: ballType, position: spawnStartPosition)
+                ball.sprite = SKSpriteNode(imageNamed: ball.ballType.spriteName)
+                let marble = ball.sprite
+                balls[row, column] = ball
+                //let marble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
+                marble?.position = pointFor(row: ball.row, col: ball.column)
+                
+                print("Grid Position(row,col) = \(gridFor(point:(marble?.position)!, offset: ball.offset ))")
+                //                if (row % 2 == 0) {
+//                    marble?.position = CGPoint(x: startPositionX + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
+//                }
+//                else{
+//                    marble?.position = CGPoint(x: startPositionX + xOffset + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
+//                }
+                ball.position = (marble?.position)!
+                marble?.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
+                marble?.physicsBody!.allowsRotation = false
+                marble?.physicsBody!.friction = 0.0
+                marble?.physicsBody!.affectedByGravity = true
+                marble?.physicsBody!.isDynamic = false
+                marble?.name = StasisCatagoryName
+                marble?.physicsBody!.categoryBitMask = StasisCategory
+                marble?.physicsBody!.contactTestBitMask = ShootingBallCategory
+                marble?.zPosition = 2
+                addChild(marble!)
+                
+            }
+        }
+        print("Grid: \(balls)")
+        print("Ball[1,1] offset = \(balls[1,1]?.offset)")
+    }
     
     func newShootingMarble(){
         
@@ -218,6 +272,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 shootingMarble.physicsBody!.restitution = 1
                 shootingMarble.physicsBody!.linearDamping = 0
                 shootingMarble.physicsBody!.angularDamping = 0
+                shootingMarble.physicsBody!.usesPreciseCollisionDetection = true
                 let x = (pos.x)
                 let y = (pos.y) - shootingPosition.y
                 let hypotenus = sqrt(x*x + y*y)
@@ -238,56 +293,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    
-    func touchDown(atPoint pos : CGPoint) {
-        //                if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-        //                    n.position = pos
-        //                    n.strokeColor = SKColor.green
-        //                    self.addChild(n)
-        //                }
-    }
-    
-    func touchMoved(toPoint pos : CGPoint) {
-        //        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-        //            n.position = pos
-        //            n.strokeColor = SKColor.blue
-        //            self.addChild(n)
-        //        }
-    }
-    
-    func touchUp(atPoint pos : CGPoint) {
-        //this creates a new node and we dont want that. we want to use the existing shootingMarbleNode
-        shootMarble(atPoint: pos)
-        
-        
-        //        if waitingToShoot {
-        //            //let shootingMarble = self.childNode(withName: ShootingCatagoryName) as! SKSpriteNode
-        //            let shootingMarble = self.childNode(withName: "redBall") as! SKSpriteNode
-        //
-        //            shootingMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2, center: shootingMarble.position)
-        //            shootingMarble.physicsBody!.categoryBitMask = ShootingBallCategory
-        //
-        //
-        //            shootingMarble.physicsBody!.allowsRotation = false
-        //            shootingMarble.physicsBody!.friction = 0.0
-        //            shootingMarble.physicsBody!.affectedByGravity = false
-        //            //shootingMarble.physicsBody!.isDynamic = false
-        //            let x = (pos.x)
-        //            let y = (pos.y) - shootingPosition.y
-        //            let hypotenus = sqrt(x*x + y*y)
-        //            let xVector = (x/hypotenus)*150.0
-        //            let yVector = (y/hypotenus)*150.0
-        //            shootingMarble.physicsBody!.applyImpulse(CGVector(dx: xVector, dy: yVector))
-        //            //shootingMarble.position = pos
-        ////            shootingMarble.physicsBody!.velocity.dx = xVector
-        ////            shootingMarble.physicsBody!.velocity.dy = yVector
-        //            print("Shooting Marble Color: \(shootingMarble.texture)")
-        //        }
-        
-        
-        
-    }
-    
     func freezeShootingMarble(freezePosition: CGPoint){
         
         if let marble = childNode(withName: ShootingCatagoryName) as! SKSpriteNode?{
@@ -297,8 +302,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             let newPosition : CGPoint = fitMarbleToGrid(contactPoint: freezePosition)
             
+            print("Shooting Marble Position = \(marble.position)")
             marble.position = newPosition
-
+            print("New Position = \(marble.position)")
             
             marble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
             marble.physicsBody!.allowsRotation = false
@@ -306,7 +312,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             marble.physicsBody!.affectedByGravity = true
             marble.physicsBody!.isDynamic = false
             
-
+            
             
             
             marble.name = StasisCatagoryName
@@ -323,6 +329,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    func pointFor(row: Int, col:Int) ->CGPoint {
+        if (row % 2 == 0){
+            return CGPoint(x: -315.0 + (60 * CGFloat(col)), y: 583.5 - (51 * CGFloat(row)))
+        }
+        return CGPoint(x: -285.0 + (60 * CGFloat(col)), y: 583.5 - (51 * CGFloat(row)))
+    }
+    
+    func gridFor(point: CGPoint, offset: Bool) -> (row: Int, column: Int){
+        var column = point.x.rounded()
+        var row = point.y.rounded()
+        if(offset){
+            column = column + 315
+            column = column/xOffset
+        }
+        else{
+            column = column + 345
+            column = column/xOffset
+        }
+        row = row - 613.5
+        row = -(row/yOffset)
+        
+        column = column + 1
+        column = column / 2
+        
+        return (Int(row), Int(column))
+    }
+    
     func fitMarbleToGrid(contactPoint: CGPoint) -> CGPoint {
         let spawnStartPosition: CGPoint = CGPoint(x: frame.minX + marbleWidth, y: frame.maxY - marbleWidth)
         var newPosition : CGPoint = contactPoint
@@ -330,21 +363,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //makes the math easier
         var yPos = contactPoint.y - frame.maxY
         var xPos = contactPoint.x + frame.maxX
-        
+        print("yPosition before = \(yPos)")
         //calculate closest yPos
+        
         yPos = (floor((yPos + marbleWidth)/yOffset) - 1)*yOffset - marbleWidth/2
+        print("yPosition after = \(yPos)")
         yPos += frame.maxY
         newPosition.y = yPos
-        
+        //print("Full x = \(xPos)")
         //calculate closest xPos
         //TODO: use the yposition to determine offset rows
-        if ((xPos.truncatingRemainder(dividingBy: xOffset)) <= 15){
+        //print("xPosition before = \(xPos.remainder(dividingBy: marbleWidth))")
+        
+        if ((xPos.remainder(dividingBy: marbleWidth))  <= 30){
             xPos -= xOffset
         }
         else {
             xPos += xOffset
 
         }
+        //print("xPosition after = \(xPos.remainder(dividingBy: marbleWidth))")
+
         xPos -= frame.maxX
         newPosition.x = xPos
         
@@ -402,44 +441,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return rand
     }
     
-    func spawnMarbles(){
-        let numberOfMarbles = 77
-        //Should change this to fit the frame
-        let spawnStartPosition: CGPoint = CGPoint(x: frame.minX + marbleWidth/2, y: frame.maxY - marbleWidth/2)
-        let startPositionX = spawnStartPosition.x//CGFloat(-315.0)
-        let startPositionY = spawnStartPosition.y//CGFloat(583.5)
-        //var row = -1
-        var i = -1
-        //NumRow and NumColumns come from Level.swift
-        for row in 0..<NumRows {
-            for column in 0..<NumColumns {
-                i += 1
-                //let rand = getRandomNumber(number: 7)
-                var ballType = BallType.random()
-                let ball = Ball(column: column, row: row, ballType: ballType)
-                ball.sprite = SKSpriteNode(imageNamed: ball.ballType.spriteName)
-                let marble = ball.sprite
-                balls[column, row] = ball
-                //let marble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
-                if (row % 2 == 0) {
-                    marble?.position = CGPoint(x: startPositionX + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
-                }
-                else{
-                    marble?.position = CGPoint(x: startPositionX + xOffset + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
-                }
-                marble?.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
-                marble?.physicsBody!.allowsRotation = false
-                marble?.physicsBody!.friction = 0.0
-                marble?.physicsBody!.affectedByGravity = true
-                marble?.physicsBody!.isDynamic = false
-                marble?.name = StasisCatagoryName
-                marble?.physicsBody!.categoryBitMask = StasisCategory
-                marble?.physicsBody!.contactTestBitMask = ShootingBallCategory
-                marble?.zPosition = 2
-                addChild(marble!)
-                
-            }
-        }
+
         /*for i in 0..<numberOfMarbles {
             if ((i)%11 == 0){
                 row += 1
@@ -464,6 +466,53 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             addChild(marble)
             //print("Row = \(row)")
         }*/
+        
+    func touchDown(atPoint pos : CGPoint) {
+        //                if let n = self.spinnyNode?.copy() as! SKShapeNode? {
+        //                    n.position = pos
+        //                    n.strokeColor = SKColor.green
+        //                    self.addChild(n)
+        //                }
+    }
+    
+    func touchMoved(toPoint pos : CGPoint) {
+        //        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
+        //            n.position = pos
+        //            n.strokeColor = SKColor.blue
+        //            self.addChild(n)
+        //        }
+    }
+    
+    func touchUp(atPoint pos : CGPoint) {
+        //this creates a new node and we dont want that. we want to use the existing shootingMarbleNode
+        shootMarble(atPoint: pos)
+        
+        
+        //        if waitingToShoot {
+        //            //let shootingMarble = self.childNode(withName: ShootingCatagoryName) as! SKSpriteNode
+        //            let shootingMarble = self.childNode(withName: "redBall") as! SKSpriteNode
+        //
+        //            shootingMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2, center: shootingMarble.position)
+        //            shootingMarble.physicsBody!.categoryBitMask = ShootingBallCategory
+        //
+        //
+        //            shootingMarble.physicsBody!.allowsRotation = false
+        //            shootingMarble.physicsBody!.friction = 0.0
+        //            shootingMarble.physicsBody!.affectedByGravity = false
+        //            //shootingMarble.physicsBody!.isDynamic = false
+        //            let x = (pos.x)
+        //            let y = (pos.y) - shootingPosition.y
+        //            let hypotenus = sqrt(x*x + y*y)
+        //            let xVector = (x/hypotenus)*150.0
+        //            let yVector = (y/hypotenus)*150.0
+        //            shootingMarble.physicsBody!.applyImpulse(CGVector(dx: xVector, dy: yVector))
+        //            //shootingMarble.position = pos
+        ////            shootingMarble.physicsBody!.velocity.dx = xVector
+        ////            shootingMarble.physicsBody!.velocity.dy = yVector
+        //            print("Shooting Marble Color: \(shootingMarble.texture)")
+        //        }
+        
+        
         
     }
     
