@@ -10,7 +10,7 @@ import Foundation
 
 //TODO: move these to GameScene if we dont end up using level
 let NumColumns = 11
-let NumRows = 7
+let NumRows = 20
 
 class Level {
 //    fileprivate var balls = Matrix<Ball>(columns: NumColumns, rows: NumRows)

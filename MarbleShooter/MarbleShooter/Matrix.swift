@@ -25,4 +25,6 @@ struct Matrix<T> {
             array[row*columns + column] = newValue
         }
     }
+
 }
+

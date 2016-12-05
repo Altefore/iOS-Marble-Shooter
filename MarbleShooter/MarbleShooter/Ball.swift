@@ -36,6 +36,9 @@ enum BallType: Int, CustomStringConvertible {
     static func random() -> BallType {
         return BallType(rawValue: Int(arc4random_uniform(7)) + 1)!
     }
+    static func color(color : Int) -> BallType{
+        return BallType(rawValue: color)!
+    }
 
 }
 
@@ -43,6 +46,7 @@ class Ball: CustomStringConvertible, Hashable{
     var column: Int
     var row: Int
     var offset: Bool
+    var alreadySearched: Bool
     var position: CGPoint
     let ballType: BallType
     var sprite: SKSpriteNode?
@@ -53,7 +57,7 @@ class Ball: CustomStringConvertible, Hashable{
     }
     
     var description: String {
-        return "type:\(ballType) square:(\(row),\(column)) position:\(position) "
+        return "type:\(ballType) grid:(\(row),\(column)) position:\(position) "
     }
     
     init(row: Int, column: Int, offset: Bool, ballType: BallType, position: CGPoint) {
@@ -62,6 +66,7 @@ class Ball: CustomStringConvertible, Hashable{
         self.offset = offset
         self.ballType = ballType
         self.position = position
+        self.alreadySearched = false
     }
 }
 //for comparing two objects of the same type required by Hashable protocol
