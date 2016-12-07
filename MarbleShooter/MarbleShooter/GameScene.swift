@@ -151,6 +151,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //ball.physicsBody!.contactTestBitMask = BottomCategory
         
         
+        let pause = SKSpriteNode(imageNamed: "pauseButton")
+        pause.position = CGPoint(x: -270, y: -520.0)
+        pause.size = CGSize(width: 45.0, height: 45.0)
+        pause.zPosition = 100
+        addChild(pause)
+        
         
         //addChild(shootingMarble)
         
@@ -784,15 +790,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        let touch = touches.first
-        let touchLocation = touch!.location(in: self)
         
-        if let body = physicsWorld.body(at: touchLocation) {
-            if body.node!.name == PauseButtonCategoryName {
-                print("PauseButtonTouched")
-                gamePaused = true
-            }
-        }
         for t in touches { self.touchUp(atPoint: t.location(in: self)) }
     }
     
