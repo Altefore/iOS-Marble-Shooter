@@ -47,6 +47,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     fileprivate var balls = Matrix<Ball>(rows: NumRows, columns: NumColumns)
     
     var level: Level!
+    var game: GameViewController!
     
     var ballToBeShot: Ball!
     let shootingPosition = CGPoint(x: 0.0, y: -440.0)
@@ -139,7 +140,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         print("FRAME MAX X = \(frame.maxY)")
         
-        
         let borderBody = SKPhysicsBody(edgeLoopFrom: frame)
         borderBody.friction = 0
         borderBody.restitution = 1
@@ -147,9 +147,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         physicsWorld.gravity = CGVector(dx: 0, dy: 0)
         physicsWorld.contactDelegate = self
-        //
         //ball.physicsBody!.contactTestBitMask = BottomCategory
-        
         
         let pause = SKSpriteNode(imageNamed: "pauseButton")
         pause.position = CGPoint(x: -270, y: -520.0)
@@ -373,6 +371,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         print("CHAIN LAST INDEX : \(chain.endIndex)")
         if chain.endIndex > 2 {
             for ball in chain{
+                //game?.calculateScore(chain: chain)
                 let breakingMarbles = nodes(at: ball.position)
                 for marble in breakingMarbles{
                     marble.removeFromParent()
@@ -380,6 +379,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
                 balls[ball.row, ball.column] = nil
             }
+            GameViewController().score = 60 * (chain.count - 2 )
+            GameViewController().updateLabels()
         }
         chain.removeAll()
     }
@@ -701,6 +702,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let rand = Int(arc4random_uniform(number))
         return rand
     }
+    
     
 
         /*for i in 0..<numberOfMarbles {
