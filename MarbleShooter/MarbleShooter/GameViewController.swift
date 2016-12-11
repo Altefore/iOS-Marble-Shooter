@@ -15,9 +15,9 @@ class GameViewController: UIViewController {
     var scene: GameScene!
     var level: Level!
     
-    var score = 0
+
     
-    @IBOutlet weak var scoreLabel: UILabel!
+
     
     override func viewDidLoad() {
         
@@ -40,10 +40,11 @@ class GameViewController: UIViewController {
             
             view.ignoresSiblingOrder = true
             //GOOD FOR VIEWING THE PHYZICZ
-            //view.showsPhysics = true
+            view.showsPhysics = true
+            view.showsFPS = true
+            view.showsNodeCount = true
             
-            //view.showsFPS = true
-            //view.showsNodeCount = true
+            //score = 0
             beginGame()
         }
         //SAMS CODE
@@ -68,8 +69,8 @@ class GameViewController: UIViewController {
     }
     
     func beginGame() {
-        score = 0
-        updateLabels()
+       // score = 0
+        //updateLabels()
         //shuffle()
     }
     
@@ -86,14 +87,7 @@ class GameViewController: UIViewController {
         }*/
     }*/
     
-    func calculateScore(chain:[Ball]){
-        score = 60 * (chain.count - 2) //60 points for 3 in a row and then another 60 points for every ball after 3. (4 ball chain = 120 pts)
-        self.updateLabels()
-    }
-    
-    func updateLabels() {
-        scoreLabel.text = String(format: "%ld", score)
-    }
+
     
     override var shouldAutorotate: Bool {
         return false
