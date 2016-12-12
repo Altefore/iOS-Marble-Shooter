@@ -8,22 +8,51 @@
 
 import UIKit
 import SpriteKit
+import AVFoundation
 import GameplayKit
 
 class GameViewController: UIViewController {
     
     var scene: GameScene!
     var level: Level!
+    var soundEffect: AVAudioPlayer!
     
-
+    lazy var backgroundMusic: AVAudioPlayer? = {
+        guard let url = Bundle.main.url(forResource: "background.mp3", withExtension: nil) else {
+            return nil
+        }
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.numberOfLoops = -1
+            return player
+        } catch {
+            return nil
+        }
+    }()
     
-
+    /*func playMusic(){
+        let path = Bundle.main.path(forResource: "background.mp3", ofType:nil)!
+        let url = URL(fileURLWithPath: path)
+        
+        do {
+            let sound = try AVAudioPlayer(contentsOf: url)
+            soundEffect = sound
+            sound.play()
+        }catch {
+            // couldn't load file :(
+        }
+        
+    }*/
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
         
+        if(UserDefaults.standard.bool(forKey: "switchState2")){
+          backgroundMusic?.play()
+        }
         
+
         //JONS CODE
         if let view = self.view as! SKView? {
             
@@ -36,8 +65,9 @@ class GameViewController: UIViewController {
                 let transition = SKTransition.fade(withDuration: 3)
                 // Present the scene
                 view.presentScene(scene, transition: transition)
+                //scene.viewController = self
             }
-            
+        
             view.ignoresSiblingOrder = true
             //GOOD FOR VIEWING THE PHYZICZ
             view.showsPhysics = true
@@ -47,25 +77,7 @@ class GameViewController: UIViewController {
             //score = 0
             beginGame()
         }
-        //SAMS CODE
-        /*
-        
-        // Configure the view.
-        let skView = view as! SKView
-        skView.isMultipleTouchEnabled = false
-        
-        // Create and configure the scene.
-        scene = GameScene(size: skView.bounds.size)
-        scene.scaleMode = .aspectFill
-        
-        // Load the level.
-        level = Level(filename: "level2")
-        scene.level = level
-    
-        //scene.addTiles()
-        skView.presentScene(scene)
-        */
-        //beginGame()
+
     }
     
     func beginGame() {
@@ -79,30 +91,17 @@ class GameViewController: UIViewController {
        // scene.addSprites(for: newBalls)
     }
     
-     /*func handleMatches() {
-        let chains = level.removeMatches()
-        
-        /*scene.animateMatchedBalls(for: chains) {
-            self.view.isUserInteractionEnabled = true
-        }*/
-    }*/
+
+    override func viewDidAppear(_ animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(true, animated: animated)
+        super.viewWillAppear(animated)
+    }
+    override func viewDidDisappear(_ animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(false, animated: animated)
+        backgroundMusic?.stop()
+        super.viewWillDisappear(animated)
+    }
+
     
-
     
-    override var shouldAutorotate: Bool {
-        return false
-    }
-
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return [.portrait, .portraitUpsideDown]
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Release any cached data, images, etc that aren't in use.
-    }
-
-    override var prefersStatusBarHidden: Bool {
-        return true
-    }
 }

@@ -12,7 +12,8 @@ import FirebaseDatabase
 
 class ScoresTableViewController: UITableViewController {
 
-    var scoreList = [Score]()
+   // var scoreList = [Score]()
+    var items: [Score] = []
     
     let cellId = "cellId"
     
@@ -23,13 +24,13 @@ class ScoresTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView:UITableView, numberOfRowsInSection section: Int) -> Int {
-        return scoreList.count
+        return items.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: cellId)
-        cell.textLabel?.text = scoreList[indexPath.row].scoreVal    
-        cell.detailTextLabel?.text = scoreList[indexPath.row].username
+        cell.textLabel?.text = String(describing: items[indexPath.row].scoreVal)
+        cell.detailTextLabel?.text = items[indexPath.row].username
         return cell
     }
     
@@ -37,20 +38,20 @@ class ScoresTableViewController: UITableViewController {
         
         let ref = FIRDatabase.database().reference(fromURL: "https://marble-shooter.firebaseio.com/")
         let scoresRef = ref.child("scores")
-        
-        scoresRef.observe(.childAdded, with: {(snapshot) in
-            if let dictionary = snapshot.value as? [String : String]{
-                print(dictionary)
-                let score = Score()
-                score.setValuesForKeys(dictionary)
-                self.scoreList.append(score)
-                DispatchQueue.main.async(execute: {
-                    self.tableView.reloadData()
-                })
+        scoresRef.queryOrdered(byChild: "scoreVal").queryLimited(toLast: 10).observe(.value, with: {(snapshot) in
+            var newItems: [Score] = []
+
+            for item in snapshot.children {
+                
+                let score = Score(snapshot: item as! FIRDataSnapshot)
+                newItems.append(score)
             }
+        
+            self.items = newItems
+            self.tableView.reloadData()
             
         })
-        
+
     }
 
     override func didReceiveMemoryWarning() {

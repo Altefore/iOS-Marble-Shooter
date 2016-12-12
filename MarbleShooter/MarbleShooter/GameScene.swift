@@ -8,6 +8,10 @@
 
 import SpriteKit
 import GameplayKit
+import AVFoundation
+import UIKit
+import FirebaseDatabase
+
 
 /* TODO:
  create game states,
@@ -43,6 +47,10 @@ let StasisCatagoryName = "stasisMarble"
 var marbleCounter = 0
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    var viewController : UIViewController!
+    var soundEffect: AVAudioPlayer!
+   // var viewController : UIViewController!
+    
     //might need to delete this.
     fileprivate var balls = Matrix<Ball>(rows: NumRows, columns: NumColumns)
     
@@ -99,8 +107,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         super.didMove(to: view)
-        
-        print("FRAME MAX X = \(frame.maxY)")
+        //print("FRAME MAX X = \(frame.maxY)")
         
         let borderBody = SKPhysicsBody(edgeLoopFrom: frame)
         borderBody.friction = 0
@@ -111,14 +118,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.contactDelegate = self
         //ball.physicsBody!.contactTestBitMask = BottomCategory
         
-        let pause = SKSpriteNode(imageNamed: "pauseButton")
+        /*let pause = SKSpriteNode(imageNamed: "pauseButton")
         pause.position = CGPoint(x: -270, y: -520.0)
         pause.size = CGSize(width: 45.0, height: 45.0)
         pause.zPosition = 100
-        addChild(pause)
+        addChild(pause)*/
         
         //add the score label
-        scoreLabel = SKLabelNode(fontNamed: "Chalkduster")
+        scoreLabel = SKLabelNode(fontNamed: "Avenir Next Medium")
         scoreLabel.text = "\(playerScore)"
         scoreLabel.horizontalAlignmentMode = .center
         scoreLabel.position = CGPoint(x: 265, y: -540)
@@ -130,21 +137,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let left = SKNode()
         left.physicsBody = SKPhysicsBody(edgeLoopFrom: leftRect)
         addChild(left)
-        //        let bottomRect = CGRect(x: frame.minX, y: frame.minY, width: frame.size.width, height: 1)
-        //        let bottom = SKNode()
-        //        bottom.physicsBody = SKPhysicsBody(edgeLoopFrom: bottomRect)
-        //        addChild(bottom)
-        //
-        //        let ceilingRect = CGRect(x: frame.minX, y: frame.maxY, width: frame.size.width, height: 1)
-        //        let ceiling = SKNode()
-        //        ceiling.physicsBody = SKPhysicsBody(edgeLoopFrom: ceilingRect)
-        //        addChild(ceiling)
-        //
-        //bottom.physicsBody!.categoryBitMask = BottomCategory
-        //        ceiling.physicsBody!.categoryBitMask = CeilingCategory
-        //
-        //        newShootingMarble()
-        //
+
         spawnMarbles()
         newGameClassic()
         
@@ -196,7 +189,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 //let marble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
                 marble?.position = pointFor(row: ball.row, col: ball.column)
                 
-                print("NEW TEST Grid Position(row,col) = \(gridFor(point:(marble?.position)!, offset: ball.offset ))")
+               // //print("NEW TEST Grid Position(row,col) = \(gridFor(point:(marble?.position)!, offset: ball.offset ))")
                 
                 //ball.position = (marble?.position)!
                 marble?.physicsBody = SKPhysicsBody(circleOfRadius: bodyWidth/2)
@@ -212,9 +205,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 
             }
         }
-        print("Grid: \(balls)")
-        print("Ball[1,1] offset = \(balls[0,1]?.offset)")
+        ////print("Grid: \(balls)")
+        ////print("Ball[1,1] offset = \(balls[0,1]?.offset)")
     }
+    
     
     func spawnNewRow(newRowOffset : Bool){
         let numberOfMarbles = NumColumns
@@ -222,10 +216,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if newRowOffset{
             mod = marbleWidth/2
         }
-        print("new Row Offset : \(newRowOffset)\n mod : \(mod)")
+       // //print("new Row Offset : \(newRowOffset)\n mod : \(mod)")
         //Should change this to fit the frame
         var spawnStartPosition: CGPoint = CGPoint(x: frame.minX + marbleWidth/2 + mod, y: frame.maxY - marbleWidth/2)
-        print("startPosition : \(spawnStartPosition)")
+        ////print("startPosition : \(spawnStartPosition)")
         //var row = -1
         //var i = -1
         //NumRow and NumColumns come from Level.swift
@@ -241,7 +235,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             //let marble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
             marble?.position = ball.position//pointFor(row: ball.row, col: ball.column)
             
-            print("NEW TEST Grid Position(row,col) = \(gridFor(point:(marble?.position)!, offset: ball.offset ))")
+           // //print("NEW TEST Grid Position(row,col) = \(gridFor(point:(marble?.position)!, offset: ball.offset ))")
             marble?.physicsBody = SKPhysicsBody(circleOfRadius: bodyWidth/2)
             marble?.physicsBody!.allowsRotation = false
             marble?.physicsBody!.friction = 0.0
@@ -256,19 +250,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             spawnStartPosition.x = spawnStartPosition.x + (marbleWidth)
             
         }
-        print("Grid: \(balls)")
-        print("Ball[1,1] offset = \(balls[0,1]?.offset)")
+        ////print("Grid: \(balls)")
+       // //////print("Ball[1,1] offset = \(balls[0,1]?.offset)")
     }
     
     func newShootingMarble(){
-        
         let rand = getRandomNumber(number: 7)
         var ballType = BallType.random()
         let ball = Ball(row: 0, column: 0, offset: true, ballType: ballType, position: shootingPosition)
         ball.sprite = SKSpriteNode(imageNamed: ball.ballType.spriteName)//imageNamed: marbleCatagoryNameList[rand] + ".png")
         let shootingMarble = ball.sprite
         shootingMarble?.position = shootingPosition
-        print("Marble Texture = \(shootingMarble?.texture)")
+        ////print("Marble Texture = \(shootingMarble?.texture)")
         shootingMarble?.physicsBody = SKPhysicsBody(circleOfRadius: bodyWidth/2, center: (shootingMarble?.position)!)
         //        shootingMarble.physicsBody!.contactTestBitMask = StasisCategory
         //        shootingMarble.physicsBody!.contactTestBitMask = CeilingCategory
@@ -289,10 +282,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild((shootingMarble)!)
         readyToShoot = true
         shotHasBeenHandled = false
+        self.view?.isUserInteractionEnabled = true
         
     }
     
     func shootMarble(atPoint pos : CGPoint){
+        self.view?.isUserInteractionEnabled = false
         if readyToShoot {
             if let shootingMarble = childNode(withName: ShootingCatagoryName) as! SKSpriteNode?{
                 //shootingMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2, center: shootingMarble.position) this one is incorrect
@@ -315,25 +310,54 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     marbleCounter += 1
                 }
             }
-
-
+            
+            if(UserDefaults.standard.bool(forKey: "switchState")){
+                playSound()
+            }
             
         }
         else {
             if let node = childNode(withName: ShootingCatagoryName) as! SKSpriteNode?{
-                print("balls: \(balls)")
+                ////print("balls: \(balls)")
                 node.removeFromParent()
             }
             //shiftDown function
-            print("Marble Counter : \(marbleCounter)")
+            ////print("Marble Counter : \(marbleCounter)")
             if (marbleCounter >= 4){
                 shiftDown()
                 marbleCounter = 0
             }
             newShootingMarble()
         }
-
         
+    }
+    
+    
+    func stopMusic(){
+        let path = Bundle.main.path(forResource: "background.mp3", ofType:nil)!
+        let url = URL(fileURLWithPath: path)
+        
+        do {
+            let sound = try AVAudioPlayer(contentsOf: url)
+            soundEffect = sound
+            sound.stop()
+        }catch {
+            // couldn't load file :(
+        }
+    }
+    
+    func playSound(){
+        let path = Bundle.main.path(forResource: "cannon.wav", ofType:nil)!
+        let url = URL(fileURLWithPath: path)
+        
+        do {
+            let sound = try AVAudioPlayer(contentsOf: url)
+            soundEffect = sound
+            sound.play()
+        }catch {
+            // couldn't load file :(
+        }
+
     }
     
     func freezeShootingMarble(freezePosition: CGPoint){
@@ -346,31 +370,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             holdPosition.x = freezePosition.x.rounded()
             holdPosition.y = (10*freezePosition.y).rounded()/10
             
-            print("NEW TEST Freezing Position: \(freezePosition)")
-            print("Hold Position: \(holdPosition)")
+            ////print("NEW TEST Freezing Position: \(freezePosition)")
+            ////print("Hold Position: \(holdPosition)")
             
             let newPosition : CGPoint = fitMarbleToGrid(contactPoint: marble.position, offset: calculateIfOffset(xPos: holdPosition.x), yPosCheck: holdPosition.y)
             //
             
-            print("Shooting Marble Position = \(marble.position)")
+            ////print("Shooting Marble Position = \(marble.position)")
             marble.position = newPosition
-            print("New Position = \(marble.position)")
+            ////print("New Position = \(marble.position)")
             
             //Use newPosition to figure out row and column
             let rowCol = gridFor(point: marble.position, offset: calculateIfOffset(xPos: marble.position.x))
-            print("NEW TEST ROWCOL = \(rowCol)")
+            ////print("NEW TEST ROWCOL = \(rowCol)")
             //Use tuple to add new ball to matrix
-            //print("Marble description: \(marble.description)")
-            //print("QUARK marble texture: \(marble.texture)")
+            ////print("Marble description: \(marble.description)")
+            ////print("QUARK marble texture: \(marble.texture)")
             let ballType = BallType.color(color: getBallTypeFromTexture(texture: marble.texture!))
+            print(rowCol)
+            if(rowCol.row > 18){
+                gameOver = true
+                gameOverAlert()
+            }
             
             //BACK HERE
             let newBall = Ball(row: rowCol.row, column: rowCol.column, offset: calculateIfOffset(xPos: marble.position.x), ballType: ballType, position: marble.position)
             newBall.sprite = SKSpriteNode(imageNamed: newBall.ballType.spriteName)
             
-            balls[rowCol.row, rowCol.column] = newBall           //print("QUARK new ball position \(balls[rowCol.row, rowCol.column]?.position.x)")
-            print("NEW TEST FROZEN Position(row,col) = \(gridFor(point: marble.position, offset: calculateIfOffset(xPos: marble.position.x) ))")
-            print("Grid Ball at \(rowCol.row),\(rowCol.column): \(balls[rowCol.row,rowCol.column]?.offset)")
+            balls[rowCol.row, rowCol.column] = newBall           ////print("QUARK new ball position \(balls[rowCol.row, rowCol.column]?.position.x)")
+            //print("NEW TEST FROZEN Position(row,col) = \(gridFor(point: marble.position, offset: calculateIfOffset(xPos: marble.position.x) ))")
+            //print("Grid Ball at \(rowCol.row),\(rowCol.column): \(balls[rowCol.row,rowCol.column]?.offset)")
             
             //change marble to be sprite
             marble = newBall.sprite!
@@ -388,100 +417,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             //Depth first search of marbles to delete
             doDFS(matrix: balls, row: rowCol.row, col: rowCol.column, ball: balls[rowCol.row, rowCol.column]!, count: 0)
             
-            print("NEW TEST CHAIN: \(chain)")
-            print("NEW GRID: \(balls)")
-            
-            //BLAHBLA
             if let node = childNode(withName: ShootingCatagoryName) as! SKSpriteNode?{
-                print("balls: \(balls)")
+                //print("balls: \(balls)")
                 node.removeFromParent()
             }
             //if chain is long enough, destroy all marbles in chain
             deleteChain()
             //reset searched bools
             setBallsSearchedFalse()
-            //structure of this app is fucked, so this is what we gotta do
-
-            
-            //shiftDown()
-            //print("Shooting Marble Location = \(shootingMarble.position)")
-            //newStasisMarble.position = shootingMarble.position
-            //breakMarble(node: shootingMarble)
-            //shootingMarble.physicsBody!.velocity.dx = 0
-            //shootingMarble.physicsBody!.velocity.dx = 0
+            self.view?.isUserInteractionEnabled = true
             
         }
         
-        /*if let marble = childNode(withName: ShootingCatagoryName) as! SKSpriteNode?{
-            //            let newStasisMarble = childNode(withName: StasisCatagoryName) as! SKSpriteNode
-            //            newStasisMarble.texture = shootingMarble.texture
-            //            newStasisMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
-            var holdPosition = freezePosition //position of the marble hit by the shooting marble
-            holdPosition.x = freezePosition.x.rounded()
-            holdPosition.y = (10*freezePosition.y).rounded()/10
-            
-            print("NEW TEST Freezing Position: \(freezePosition)")
-            print("Hold Position: \(holdPosition)")
-
-            let newPosition : CGPoint = fitMarbleToGrid(contactPoint: marble.position, offset: calculateIfOffset(xPos: holdPosition.x), yPosCheck: holdPosition.y)
-            //
-            
-            print("Shooting Marble Position = \(marble.position)")
-            marble.position = newPosition
-            print("New Position = \(marble.position)")
-            
-            //Use newPosition to figure out row and column
-            let rowCol = gridFor(point: marble.position, offset: calculateIfOffset(xPos: marble.position.x))
-            print("NEW TEST ROWCOL = \(rowCol)")
-            //Use tuple to add new ball to matrix
-            //print("Marble description: \(marble.description)")
-            //print("QUARK marble texture: \(marble.texture)")
-            let ballType = BallType.color(color: getBallTypeFromTexture(texture: marble.texture!))
- 
-            //BACK HERE
-            let newBall = Ball(row: rowCol.row, column: rowCol.column, offset: calculateIfOffset(xPos: marble.position.x), ballType: ballType, position: marble.position)
-
-            balls[rowCol.row, rowCol.column] = newBall           //print("QUARK new ball position \(balls[rowCol.row, rowCol.column]?.position.x)")
-            print("NEW TEST FROZEN Position(row,col) = \(gridFor(point: marble.position, offset: calculateIfOffset(xPos: marble.position.x) ))")
-            print("Grid Ball at \(rowCol.row),\(rowCol.column): \(balls[rowCol.row,rowCol.column]?.offset)")
-
-            marble.physicsBody = SKPhysicsBody(circleOfRadius: bodyWidth/2)
-            marble.physicsBody!.allowsRotation = false
-            marble.physicsBody!.friction = 0.0
-            marble.physicsBody!.affectedByGravity = true
-            marble.physicsBody!.isDynamic = false
-            
-            marble.name = StasisCatagoryName
-            marble.physicsBody!.categoryBitMask = StasisCategory
-            marble.physicsBody!.contactTestBitMask = ShootingBallCategory
-            //addChild(marble)
-            //Depth first search of marbles to delete
-            doDFS(matrix: balls, row: rowCol.row, col: rowCol.column, ball: balls[rowCol.row, rowCol.column]!, count: 0)
-            
-            print("NEW TEST CHAIN: \(chain)")
-            print("NEW GRID: \(balls)")
-            
-            //BLAHBLA
-            
-            
-            //if chain is long enough, destroy all marbles in chain
-            deleteChain()
-            //reset searched bools
-            setBallsSearchedFalse()
-            //print("Shooting Marble Location = \(shootingMarble.position)")
-            //newStasisMarble.position = shootingMarble.position
-            //breakMarble(node: shootingMarble)
-            //shootingMarble.physicsBody!.velocity.dx = 0
-            //shootingMarble.physicsBody!.velocity.dx = 0
-            
-        }
-        */
         shotHasBeenHandled = true
     }
     
     func deleteChain(){
-        print("CHAIN LENGTH : \(chain.count)")
-        print("CHAIN LAST INDEX : \(chain.endIndex)")
+        //print("CHAIN LENGTH : \(chain.count)")
+        //print("CHAIN LAST INDEX : \(chain.endIndex)")
         if chain.endIndex > 2 {
             calculateScore()
             for ball in chain{
@@ -489,10 +442,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 let breakingMarbles = nodes(at: ball.position)
                 for marble in breakingMarbles{
                     marble.removeFromParent()
-                    print("CHAIN NODE REMOVED")
+                    //print("CHAIN NODE REMOVED")
                 }
                 balls[ball.row, ball.column] = nil
-                print("New test: Ball at \(ball.row, ball.column) = \(balls[ball.row, ball.column])")
+                //print("New test: Ball at \(ball.row, ball.column) = \(balls[ball.row, ball.column])")
             }
         }
         chain.removeAll()
@@ -507,7 +460,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             //check the color of the ball and compare it
             
             if( balls[row, col]?.ballType == ballType && balls[row, col]?.alreadySearched == false ){
-                print("NEW CHAIN IN FUNC: \(chain)")
+                //print("NEW CHAIN IN FUNC: \(chain)")
                 return true
                 
             }
@@ -532,7 +485,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             mod = -1
         }
         balls[row,col]?.alreadySearched = true
-        print("CHAIN Count = \(count)")
+        //print("CHAIN Count = \(count)")
         chain.append((balls[row,col]!))
         //check left
         if (col != 0){
@@ -619,7 +572,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func calculateIfOffset(xPos: CGFloat) -> Bool{
         let x = Int(xPos) + 345
-        print("Quark xPosition : \(x)")
+        //print("Quark xPosition : \(x)")
         if (x % Int(marbleWidth) == 0){
             return true
         }
@@ -689,13 +642,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //makes the math easier
         var yPos = contactPoint.y - frame.maxY
         var xPos = contactPoint.x + frame.maxX
-        //print("fitMarbleToGrid yPosition before = \(yPos)")
-        print("fitMarbleToGrid: Y POSITION 1 : \(yPos)")
+        ////print("fitMarbleToGrid yPosition before = \(yPos)")
+        //print("fitMarbleToGrid: Y POSITION 1 : \(yPos)")
         //calculate closest yPos
         yPos = (floor((yPos)/yOffset)+1)*yOffset - marbleWidth/2
-        //print("fitMarbleToGrid yPosition after = \(yPos)")
+        ////print("fitMarbleToGrid yPosition after = \(yPos)")
         
-        print("fitMarbleToGrid: Y POSITION 2 : \(yPos)")
+        //print("fitMarbleToGrid: Y POSITION 2 : \(yPos)")
 
         yPos += frame.maxY
         //convert back
@@ -704,45 +657,37 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             yPos += yOffset
         }
         newPosition.y = yPos
-        print("fitMarbleToGrid: X POSITION 1 : \(xPos)")
+        //print("fitMarbleToGrid: X POSITION 1 : \(xPos)")
         xPos = ((xPos)/marbleWidth).rounded()*marbleWidth //- marbleWidth/2
-        //print("fitMarbleToGrid contact marble offset :  \(offset)")
-        //print("fitMarbleToGrid y == y offset : \(yPos == contactPoint.y)")
-//        if (calculateIfOffset(xPos: contactPoint.x)){
-//            xPos = xPos + xOffset
-//            print("Quark Offsetting")
-//        }
-        //if its an offset row, offset
-        print("fitMarbleToGrid: X POSITION 2 : \(xPos)")
         
         if ((yPos == contactPoint.y)){
             if (offset){
                 xPos = xPos + xOffset
-                print("FitMarbleToGrid Offsetting 1")
+                //print("FitMarbleToGrid Offsetting 1")
                 thisOffset = false
             }
         }
         else{
             if(!offset){
                 xPos = xPos + xOffset
-                print("fitMarbleToGrid Offsetting 2")
+                //print("fitMarbleToGrid Offsetting 2")
                 thisOffset = false
             }
         }
-        print("fitMarbleToGrid: X POSITION 3 : \(xPos)")
+        //print("fitMarbleToGrid: X POSITION 3 : \(xPos)")
         //vvv this if checks to see if the marble is already in position
         if(!((xPos.remainder(dividingBy: marbleWidth) == 0 && !thisOffset)||(thisOffset && (xPos + xOffset).remainder(dividingBy: marbleWidth) == 0))){
             if ((0 < (xPos.remainder(dividingBy: marbleWidth)) && (xPos.remainder(dividingBy: marbleWidth)) < 30) && (abs(contactPoint.x + frame.maxX - xPos) < 30)){
-                print("fitMarbleToGrid: \((xPos.remainder(dividingBy: marbleWidth)))")
-                print("fitMarbleToGrid: \((abs(contactPoint.x + frame.maxX - xPos)))")
+                //print("fitMarbleToGrid: \((xPos.remainder(dividingBy: marbleWidth)))")
+                //print("fitMarbleToGrid: \((abs(contactPoint.x + frame.maxX - xPos)))")
                 xPos -= xOffset
             }
             else {
                 xPos += xOffset
 
             }
-            print("fitMarbleToGrid: X POSITION 4 : \(xPos)")
-            print("fitMarbleToGrid: contact POSITION : \(contactPoint.x + frame.maxX)")
+            //print("fitMarbleToGrid: X POSITION 4 : \(xPos)")
+            //print("fitMarbleToGrid: contact POSITION : \(contactPoint.x + frame.maxX)")
             
             if((contactPoint.x + frame.maxX) - xPos > 30){//if shift left > 30 points
                 xPos += 60
@@ -757,9 +702,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(xPos > 660){
             xPos = 660
         }
-        print("fitMarbleToGrid: X POSITION 5 : \(xPos)")
+        //print("fitMarbleToGrid: X POSITION 5 : \(xPos)")
 
-        //print("xPosition after = \(xPos.remainder(dividingBy: marbleWidth))")
+        ////print("xPosition after = \(xPos.remainder(dividingBy: marbleWidth))")
         
         if(checkGridForNill(point: newPosition)){
             //TODO: Do something here I guess
@@ -767,12 +712,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 newPosition.x += 60
             }
         }
-        print("fitMarbleToGrid: X POSITION 6 : \(xPos)")
+        //print("fitMarbleToGrid: X POSITION 6 : \(xPos)")
         
         xPos -= frame.maxX
         newPosition.x = xPos
-        //print("fitMarbleToGrid: X POSITION 7 : \(xPos-frame.maxX)")
-        print("fitMarbleToGrid newPosition : \(newPosition)")
+        ////print("fitMarbleToGrid: X POSITION 7 : \(xPos-frame.maxX)")
+        //print("fitMarbleToGrid newPosition : \(newPosition)")
         return newPosition
         
     }
@@ -801,7 +746,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     //TODO: Work on this function
     func shiftDown(){
-        print("grid(8,0) = \(balls[8,0])")
+        //print("grid(8,0) = \(balls[8,0])")
         var newRowOffset : Bool?
         for col in 0...19{
             if(balls[0,col] != nil){
@@ -815,33 +760,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     balls[row,col]?.row += 1
                     balls[row,col]?.position.y -= yOffset
                     balls[row,col]?.sprite?.position.y = (balls[row,col]?.position.y)!
-                    print("MLKJ: row \(row)\(balls[row,col]?.sprite?.position.y)")
+                    //print("MLKJ: row \(row)\(balls[row,col]?.sprite?.position.y)")
                     
                     balls[row+1,col] = balls[row,col]
                     if(startPos! - (balls[row+1, col]?.sprite?.position.y)! > 51){
-                        print("SHIFT DOWN PROBLEM AT BALL : \(balls[row+1,col])")
+                        //print("SHIFT DOWN PROBLEM AT BALL : \(balls[row+1,col])")
                     }
                 }
             }
         }
-        
-        print("NEW ROW OFFSET : \(newRowOffset!)")
+        //print("NEW ROW OFFSET : \(newRowOffset!)")
         spawnNewRow(newRowOffset: newRowOffset!)
+        if(checkRow20()){
+            gameOver = true
+            gameOverAlert()
+            //showPauseAlert()
+        }
     }
     
-    func checkRow20(){
+    func checkRow20() -> Bool{
+        print("CHECKING ROWS")
         for col in 0...10{
-            if (balls[19,col] != nil){
+            if (balls[18,col] != nil){
                 print("GAME OVER")
-                gameOver = true
+                return true
             }
         }
+        return false
     }
     
     
     func didBegin(_ contact: SKPhysicsContact) {
         if (!shotHasBeenHandled) {//if shot has not been handled
-            print("didBegin")
+            //print("didBegin")
             // 1
             var firstBody: SKPhysicsBody
             var secondBody: SKPhysicsBody
@@ -855,19 +806,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             // 3
             if firstBody.categoryBitMask == ShootingBallCategory && secondBody.categoryBitMask == BottomCategory {
-                print("Hit ceiling. First contact has been made.")
+                //print("Hit ceiling. First contact has been made.")
             }
             if firstBody.categoryBitMask == ShootingBallCategory && secondBody.categoryBitMask == StasisCategory {
-                //print("Hit marble secondBody \(secondBody.node!.position)")
-                //print("Hit marble firstBody \(firstBody.node!.position)")
+                ////print("Hit marble secondBody \(secondBody.node!.position)")
+                ////print("Hit marble firstBody \(firstBody.node!.position)")
                 
                 //TODO: Figure out how to pick one when two hit at the same time
                 freezeShootingMarble(freezePosition: secondBody.node!.position)
                 
             }
             else {
-                print("first body: \(firstBody)")
-                print("secondBody : \(secondBody)")
+                //print("first body: \(firstBody)")
+                //print("secondBody : \(secondBody)")
             }
         }
     }
@@ -900,16 +851,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //this creates a new node and we dont want that. we want to use the existing shootingMarbleNode
         //TODO: Structure of this app is fucked, so this is how we do it
         shootMarble(atPoint: pos)
-        
-
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        //        if let label = self.label {
-        //            label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
-        //        }
-        //
-        //        for t in touches { self.touchDown(atPoint: t.location(in: self)) }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -917,8 +861,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
+        for t in touches {
+            self.touchUp(atPoint: t.location(in: self))
+        }
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -928,6 +873,51 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+    }
+    
+    
+}
+
+private extension GameScene {
+    func gameOverAlert(){
+        let alert = UIAlertController(title: "Game Over", message: "add a username", preferredStyle: .alert)
+        
+        let saveAction = UIAlertAction(title: "Save",
+                                       style: .default) { action in
+                                        let textField = alert.textFields![0]
+                                        
+                                        let ref = FIRDatabase.database().reference(fromURL: "https://marble-shooter.firebaseio.com/")
+                                        let scoresRef = ref.child("scores").childByAutoId()
+                                        scoresRef.updateChildValues(["scoreVal": Int(self.scoreLabel.text!)!, "username": textField.text!])
+                                        
+                                        let view = self.view 
+                                        let scene = SKScene(fileNamed: "GameScene")
+                                            // Set the scale mode to scale to fit the window
+                                            scene?.scaleMode = .aspectFill
+                                            
+                                            let transition = SKTransition.fade(withDuration: 1)
+                                            // Present the scene
+                                            view?.presentScene(scene!, transition: transition)
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .default){ action in
+            
+            let view = self.view as! SKView?
+            let scene = SKScene(fileNamed: "GameScene")
+            // Set the scale mode to scale to fit the window
+            scene?.scaleMode = .aspectFill
+            
+            let transition = SKTransition.fade(withDuration: 1)
+            // Present the scene
+            view?.presentScene(scene!, transition: transition)
+        }
+        
+        alert.addTextField()
+    
+        alert.addAction(saveAction)
+        alert.addAction(cancelAction)
+        
+        self.view?.window?.rootViewController?.present(alert, animated: true, completion: nil)
     }
 }
 

@@ -40,6 +40,15 @@ class MainMenuViewController: UIViewController {
         
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(true, animated: animated)
+        super.viewWillAppear(animated)
+    }
+    override func viewDidDisappear(_ animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(false, animated: animated)
+        super.viewWillDisappear(animated)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
