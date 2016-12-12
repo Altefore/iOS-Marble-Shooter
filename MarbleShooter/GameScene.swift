@@ -14,7 +14,7 @@ import GameplayKit
  boolean for ball being shot,
  create queue for random balls
  Change the points and positions to fit frame
- ASK PROFESSOR ABOUT BODY COLLISION
+ 
 */
 
 /*NOTES
@@ -47,7 +47,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     fileprivate var balls = Matrix<Ball>(rows: NumRows, columns: NumColumns)
     
     var level: Level!
-    var game: GameViewController!
     
     var ballToBeShot: Ball!
     let shootingPosition = CGPoint(x: 0.0, y: -440.0)
@@ -55,9 +54,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let TileWidth: CGFloat = 37.0
     let TileHeight: CGFloat = 40.0
     
-    var ballCount: Int = 0
-    var playerScore: Int = 0
-    var gameOver : Bool = false
     
     let gameLayer = SKNode()
     let ballsLayer = SKNode()
@@ -77,7 +73,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let CeilingCategory     : UInt32 = 0x1 << 5
     
     let marbleWidth = SKSpriteNode(imageNamed: "redBall").size.width
-    let bodyWidth = SKSpriteNode(imageNamed: "redBall").size.width - 12
+    let bodyWidth = SKSpriteNode(imageNamed: "redBall").size.width - 10
     
     let yOffset = CGFloat(51.0)
     let xOffset = CGFloat(30.0)
@@ -143,6 +139,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         print("FRAME MAX X = \(frame.maxY)")
         
+        
         let borderBody = SKPhysicsBody(edgeLoopFrom: frame)
         borderBody.friction = 0
         borderBody.restitution = 1
@@ -150,13 +147,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         physicsWorld.gravity = CGVector(dx: 0, dy: 0)
         physicsWorld.contactDelegate = self
+        //
         //ball.physicsBody!.contactTestBitMask = BottomCategory
         
-        let pause = SKSpriteNode(imageNamed: "pauseButton")
-        pause.position = CGPoint(x: -270, y: -520.0)
-        pause.size = CGSize(width: 45.0, height: 45.0)
-        pause.zPosition = 100
-        addChild(pause)
         
         
         //addChild(shootingMarble)
@@ -215,12 +208,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 let ball = Ball( row: row, column: column, offset: offset, ballType: ballType, position: pointFor(row: row, col: column))
                 ball.sprite = SKSpriteNode(imageNamed: ball.ballType.spriteName)
                 let marble = ball.sprite
-                //Back here
                 balls[row, column] = ball
                 //let marble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
                 marble?.position = pointFor(row: ball.row, col: ball.column)
                 
-                print("NEW TEST Grid Position(row,col) = \(gridFor(point:(marble?.position)!, offset: ball.offset ))")
+                print("Grid Position(row,col) = \(gridFor(point:(marble?.position)!, offset: ball.offset ))")
                 //                if (row % 2 == 0) {
 //                    marble?.position = CGPoint(x: startPositionX + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
 //                }
@@ -318,7 +310,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             holdPosition.x = freezePosition.x.rounded()
             holdPosition.y = (10*freezePosition.y).rounded()/10
             
-            print("NEW TEST Freezing Position: \(freezePosition)")
+            print("Freezing Position: \(freezePosition)")
             print("Hold Position: \(holdPosition)")
 
             let newPosition : CGPoint = fitMarbleToGrid(contactPoint: marble.position, offset: calculateIfOffset(xPos: holdPosition.x))
@@ -330,17 +322,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             //Use newPosition to figure out row and column
             let rowCol = gridFor(point: marble.position, offset: calculateIfOffset(xPos: marble.position.x))
-            print("NEW TEST ROWCOL = \(rowCol)")
+            print("CHAIN ROWCOL = \(rowCol)")
             //Use tuple to add new ball to matrix
             //print("Marble description: \(marble.description)")
             //print("QUARK marble texture: \(marble.texture)")
             let ballType = BallType.color(color: getBallTypeFromTexture(texture: marble.texture!))
  
-            //BACK HERE
-            let newBall = Ball(row: rowCol.row, column: rowCol.column, offset: calculateIfOffset(xPos: marble.position.x), ballType: ballType, position: marble.position)
-
-            balls[rowCol.row, rowCol.column] = newBall           //print("QUARK new ball position \(balls[rowCol.row, rowCol.column]?.position.x)")
-            print("NEW TEST FROZEN Position(row,col) = \(gridFor(point: marble.position, offset: calculateIfOffset(xPos: marble.position.x) ))")
+            
+            balls[rowCol.row, rowCol.column] = Ball(row: rowCol.row, column: rowCol.column, offset: calculateIfOffset(xPos: marble.position.x), ballType: ballType, position: marble.position)
+            //print("QUARK new ball position \(balls[rowCol.row, rowCol.column]?.position.x)")
+            print("Grid Position(row,col) = \(gridFor(point: marble.position, offset: calculateIfOffset(xPos: marble.position.x) ))")
             print("Grid Ball at \(rowCol.row),\(rowCol.column): \(balls[rowCol.row,rowCol.column]?.offset)")
             marble.physicsBody = SKPhysicsBody(circleOfRadius: bodyWidth/2)
             marble.physicsBody!.allowsRotation = false
@@ -351,11 +342,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             marble.name = StasisCatagoryName
             marble.physicsBody!.categoryBitMask = StasisCategory
             marble.physicsBody!.contactTestBitMask = ShootingBallCategory
-            //addChild(marble)
+            
             //Depth first search of marbles to delete
             doDFS(matrix: balls, row: rowCol.row, col: rowCol.column, ball: balls[rowCol.row, rowCol.column]!, count: 0)
             
-            print("NEW TEST CHAIN: \(chain)")
+            print("NEW CHAIN: \(chain)")
             print("NEW GRID: \(balls)")
 
             //if chain is long enough, destroy all marbles in chain
@@ -376,17 +367,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         print("CHAIN LAST INDEX : \(chain.endIndex)")
         if chain.endIndex > 2 {
             for ball in chain{
-                //game?.calculateScore(chain: chain)
                 let breakingMarbles = nodes(at: ball.position)
                 for marble in breakingMarbles{
                     marble.removeFromParent()
                     print("CHAIN NODE REMOVED")
                 }
                 balls[ball.row, ball.column] = nil
-                print("New test: Ball at \(ball.row, ball.column) = \(balls[ball.row, ball.column])")
             }
-            GameViewController().score = 60 * (chain.count - 2 )
-            GameViewController().updateLabels()
         }
         chain.removeAll()
     }
@@ -421,7 +408,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         var count = count + 1
         let offset = ball.offset
         var mod = 0
-        if !offset { //if the ball being searched around is not in an offset row
+        if !offset {
             mod = -1
         }
         balls[row,col]?.alreadySearched = true
@@ -434,7 +421,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if((balls[row, col-1]?.alreadySearched)! == false){
                     balls[row, col-1]?.alreadySearched = true
                     //count += 1
-                    doDFS(matrix: matrix, row: row, col: col - 1, ball: balls[row,col - 1]!, count: count)
+                    doDFS(matrix: matrix, row: row, col: col - 1, ball: balls[row,col]!, count: count)
                 }
             }
         }
@@ -445,62 +432,95 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if((balls[row, col+1]?.alreadySearched)! == false){
                     balls[row, col+1]?.alreadySearched = true
                     //count += 1
-                    doDFS(matrix: matrix, row: row, col: col + 1, ball: balls[row,col + 1]!, count: count)
+                    doDFS(matrix: matrix, row: row, col: col + 1, ball: balls[row,col]!, count: count)
                 }
             }
         }
+        
+        //check row down
+        if (neighborExists(matrix: matrix, row: row-1, col: col + mod, ballType: ball.ballType)){
+            //if neighbor toBeDestroyed = false, set to true and recursively search it
+            if((balls[row-1, col + mod]?.alreadySearched)! == false){
+                balls[row-1, col + mod]?.alreadySearched = true
+                //count += 1
+                doDFS(matrix: matrix, row: row-1, col: col + mod, ball: balls[row,col]!, count: count)
+                //matrix[row, col+1]?.toBeDestroyed = true
+            }
+        }
+        
+        if (neighborExists(matrix: matrix, row: row-1, col: col + 1 + mod, ballType: ball.ballType)){
+            //if neighbor toBeDestroyed = false, set to true and recursively search it
+            if( balls[row-1, col+1+mod] != nil && ((balls[row-1, col+1+mod]?.alreadySearched)! == false)){
+                balls[row-1, col+1+mod]?.alreadySearched = true
+                //count += 1
+                doDFS(matrix: matrix, row: row-1, col: col + 1 + mod, ball: balls[row,col]!, count: count)
+                //matrix[row, col+1]?.toBeDestroyed = true
+            }
+        }
+        
         
         //check row up
-        if (row != 0){
-            if (neighborExists(matrix: matrix, row: row-1, col: col + mod, ballType: ball.ballType)){
-                //if neighbor toBeDestroyed = false, set to true and recursively search it
-                if((balls[row-1, col + mod]?.alreadySearched)! == false){
-                    balls[row-1, col + mod]?.alreadySearched = true
-                    //count += 1
-                    doDFS(matrix: matrix, row: row-1, col: col + mod, ball: balls[row-1,col+mod]!, count: count)
-                    //matrix[row, col+1]?.toBeDestroyed = true
-                }
+        if (neighborExists(matrix: matrix, row: row+1, col: col + mod, ballType: ball.ballType)){
+            //if neighbor toBeDestroyed = false, set to true and recursively search it
+            if((balls[row+1, col + mod]?.alreadySearched)! == false){
+                balls[row+1, col + mod]?.alreadySearched = true
+                //count += 1
+                doDFS(matrix: matrix, row: row+1, col: col + mod, ball: balls[row,col]!, count: count)
+                //matrix[row, col+1]?.toBeDestroyed = true
             }
-            
-            if (neighborExists(matrix: matrix, row: row-1, col: col + 1 + mod, ballType: ball.ballType)){
-                //if neighbor toBeDestroyed = false, set to true and recursively search it
-                if( balls[row-1, col+1+mod] != nil && ((balls[row-1, col+1+mod]?.alreadySearched)! == false)){
-                    balls[row-1, col+1+mod]?.alreadySearched = true
-                    //count += 1
-                    doDFS(matrix: matrix, row: row-1, col: col + 1 + mod, ball: balls[row-1,col+1+mod]!, count: count)
-                    //matrix[row, col+1]?.toBeDestroyed = true
-                }
-            }
+        }
         
-        }
-        //check row down
-        if (row != 20){
-            if (neighborExists(matrix: matrix, row: row+1, col: col + mod, ballType: ball.ballType)){
-                //if neighbor toBeDestroyed = false, set to true and recursive ly search it
-                if((balls[row+1, col + mod]?.alreadySearched)! == false){
-                    balls[row+1, col + mod]?.alreadySearched = true
-                    //count += 1
-                    doDFS(matrix: matrix, row: row+1, col: col + mod, ball: balls[row+1,col+mod]!, count: count)
-                    //matrix[row, col+1]?.toBeDestroyed = true
-                }
-            }
-            
-            if (neighborExists(matrix: matrix, row: row+1, col: col + 1 + mod, ballType: ball.ballType)){
-                //if neighbor toBeDestroyed = false, set to true and recursively search it
-                if((balls[row+1, col+1+mod]?.alreadySearched)! == false){
-                    balls[row+1, col+1+mod]?.alreadySearched = true
-                    //count += 1
-                    doDFS(matrix: matrix, row: row+1, col: col + 1 + mod, ball: balls[row+1,col+1+mod]!, count: count)
-                    //matrix[row, col+1]?.toBeDestroyed = true
-                }
+        if (neighborExists(matrix: matrix, row: row+1, col: col + 1 + mod, ballType: ball.ballType)){
+            //if neighbor toBeDestroyed = false, set to true and recursively search it
+            if((balls[row+1, col+1+mod]?.alreadySearched)! == false){
+                balls[row+1, col+1+mod]?.alreadySearched = true
+                //count += 1
+                doDFS(matrix: matrix, row: row+1, col: col + 1 + mod, ball: balls[row,col]!, count: count)
+                //matrix[row, col+1]?.toBeDestroyed = true
             }
         }
+        
+//        for i in 0..<offsets.count {
+//            
+//            let xOff = offsets[i]
+//            
+//            for j in 0..<offsets.count {
+//                
+//                let yOff = offsets[j]
+//                
+//                
+//                
+//                //don't count itself as its own neighbor as well as top-left & bottom-left
+//                
+//                if( (xOff == 0 && yOff == 0) || (xOff == 1 && yOff == -1) || (xOff == -1 && yOff == -1) ){
+//                    
+//                    continue
+//                    
+//                }
+//                
+//                if(neighborExists(matrix: matrix, row: i+yOff, col: j+xOff, ball: ball)){
+//                    
+//                    print("ADDING TO CHAIN")
+//                    chain.append(matrix[i+yOff, j+xOff]!)
+//                    
+//                    doDFS(matrix: matrix, row: i+yOff, col: j+xOff, ball: ball)
+//                    
+//                }
+//                
+//            }
+//            
+//        }
+//        for ball in chain {
+//            print("CHAIN: \(ball)")
+//            balls[ball.row, ball.column] = nil
+//            breakMarble(node: (ball.sprite)!)
+//        }
         
     }
     
-    //resets all the ballSearched bools to false so that they can 
-    //be searched again
     func setBallsSearchedFalse(){
+        var row: Int
+        var col: Int
         for row in 0..<balls.rows{
             for col in 0..<balls.columns{
                 if(balls[row,col] != nil){
@@ -525,7 +545,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         return CGPoint(x: -285.0 + (60 * CGFloat(col)), y: 583.5 - (51 * CGFloat(row)))
     }
-    //returns a tupple containing grid location for a given point
+    
     func gridFor(point: CGPoint, offset: Bool) -> (row: Int, column: Int){
         var column = point.x.rounded()
         var row = point.y.rounded()
@@ -548,7 +568,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return (Int(row), Int(column))
     }
     
-    //pretty self explanitory
     func getBallTypeFromTexture(texture: SKTexture) -> Int{
         let string = texture.description
         if string.range(of:"blueBall") != nil{
@@ -578,91 +597,53 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func fitMarbleToGrid(contactPoint: CGPoint, offset: Bool) -> CGPoint {
 
         var newPosition : CGPoint = contactPoint
+        var thisOffset : Bool
         
         //makes the math easier
         var yPos = contactPoint.y - frame.maxY
         var xPos = contactPoint.x + frame.maxX
-        //print("fitMarbleToGrid yPosition before = \(yPos)")
+        print("yPosition before = \(yPos)")
         
         //calculate closest yPos
         yPos = (floor((yPos)/yOffset)+1)*yOffset - marbleWidth/2
-        //print("fitMarbleToGrid yPosition after = \(yPos)")
+        print("yPosition after = \(yPos)")
         yPos += frame.maxY
         //convert back
         newPosition.y = yPos
-        print("fitMarbleToGrid: X POSITION 1 : \(xPos)")
+     
         xPos = ((xPos)/marbleWidth).rounded()*marbleWidth //- marbleWidth/2
-        //print("fitMarbleToGrid contact marble offset :  \(offset)")
-        //print("fitMarbleToGrid y == y offset : \(yPos == contactPoint.y)")
+        print("contact marble offset :  \(offset)")
+        print("y == y offset : \(yPos == contactPoint.y)")
 //        if (calculateIfOffset(xPos: contactPoint.x)){
 //            xPos = xPos + xOffset
 //            print("Quark Offsetting")
 //        }
-        print("fitMarbleToGrid: X POSITION 2 : \(xPos)")
         if ((yPos == contactPoint.y)){
             if (offset){
                 xPos = xPos + xOffset
-                //print("Quark Offsetting")
+                print("Quark Offsetting")
             }
         }
         else{
             if(!offset){
                 xPos = xPos + xOffset
-                //print("Quark Offsetting")
+                print("Quark Offsetting")
             }
         }
-        print("fitMarbleToGrid: X POSITION 3 : \(xPos)")
-        if ((xPos.remainder(dividingBy: marbleWidth))  <= 30 && (abs(contactPoint.x + frame.maxX - xPos) <= 30)){
-            print("fitMarbleToGrid: \((xPos.remainder(dividingBy: marbleWidth)))")
-            print("fitMarbleToGrid: \((abs(contactPoint.x + frame.maxX - xPos)))")
+        if ((xPos.remainder(dividingBy: marbleWidth))  <= 30){
             xPos -= xOffset
         }
         else {
             xPos += xOffset
 
         }
-        print("fitMarbleToGrid: X POSITION 4 : \(xPos)")
-        print("fitMarbleToGrid: contact POSITION : \(contactPoint.x + frame.maxX)")
-        
-        if((contactPoint.x + frame.maxX) - xPos > 30){//if shift left > 30 points
-            xPos += 60
-        }
-        if(xPos - (contactPoint.x + frame.maxX) > 30){//if shift right > 30 points
-            xPos -= 60
-        }
-        if(xPos < 30){//dont let it go out of bounds
-            xPos = 30
-        }
-        if(xPos > 660){
-            xPos = 660
-        }
-        print("fitMarbleToGrid: X POSITION 5 : \(xPos)")
-
         //print("xPosition after = \(xPos.remainder(dividingBy: marbleWidth))")
-        
-        if(checkGridForNill(point: newPosition)){
-            //TODO: Do something here I guess
-            if(newPosition.x < 315){
-                newPosition.x += 60
-            }
-        }
-        print("fitMarbleToGrid: X POSITION 6 : \(xPos)")
-        
+
         xPos -= frame.maxX
         newPosition.x = xPos
-        //print("fitMarbleToGrid: X POSITION 7 : \(xPos-frame.maxX)")
-        print("fitMarbleToGrid newPosition : \(newPosition)")
+        
         return newPosition
         
-    }
-    
-    func checkGridForNill(point : CGPoint) -> Bool{
-        let offset = calculateIfOffset(xPos: point.x)
-        let rowCol = gridFor(point: point, offset: offset )
-        if(balls[rowCol.row,rowCol.column] == nil){
-            return true
-        }
-        return false
     }
     
     func breakMarble(node: SKNode) {
@@ -677,35 +658,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //SKAction.removeFromParent()]))
         //}
         node.removeFromParent()
-    }
-    //TODO: Work on this function
-    func shiftDown(){
-        print("grid(8,0) = \(balls[8,0])")
-        var newRowOffset : Bool
-        for col in 0...19{
-            if(balls[0,col] != nil){
-                newRowOffset = !(balls[0,col]?.offset)!
-            }
-        }
-        for row in stride(from: 19, through: 0, by: -1) {
-            for col in stride(from: 10, through: 0, by: -1){
-                if(balls[row,col] != nil){
-                    balls[row,col]?.row += 1
-                    balls[row,col]?.position.y -= yOffset
-                    balls[row,col]?.sprite?.position.y = (balls[row,col]?.position.y)!
-                    balls[row+1,col] = balls[row,col]
-                }
-            }
-        }
-    }
-    
-    func checkRow20(){
-        for col in 0...10{
-            if (balls[19,col] != nil){
-                print("GAME OVER")
-                gameOver = true
-            }
-        }
     }
     
     
@@ -728,8 +680,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if firstBody.categoryBitMask == ShootingBallCategory && secondBody.categoryBitMask == StasisCategory {
             //print("Hit marble secondBody \(secondBody.node!.position)")
             //print("Hit marble firstBody \(firstBody.node!.position)")
-            
-            //TODO: Figure out how to pick one when two hit at the same time
             freezeShootingMarble(freezePosition: secondBody.node!.position)
             
         }
@@ -746,6 +696,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return rand
     }
     
+
+        /*for i in 0..<numberOfMarbles {
+            if ((i)%11 == 0){
+                row += 1
+            }
+            let rand = getRandomNumber(number: 7)
+            let marble = SKSpriteNode(imageNamed: marbleCatagoryNameList[rand] + ".png")
+            if (row % 2 == 0) {
+                marble.position = CGPoint(x: startPositionX + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
+            }
+            else{
+                marble.position = CGPoint(x: startPositionX + xOffset + (marbleWidth * CGFloat(i%11)), y: startPositionY - yOffset*(CGFloat(row)))
+            }
+            marble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2)
+            marble.physicsBody!.allowsRotation = false
+            marble.physicsBody!.friction = 0.0
+            marble.physicsBody!.affectedByGravity = true
+            marble.physicsBody!.isDynamic = false
+            marble.name = StasisCatagoryName
+            marble.physicsBody!.categoryBitMask = StasisCategory
+            marble.physicsBody!.contactTestBitMask = ShootingBallCategory
+            marble.zPosition = 2
+            addChild(marble)
+            //print("Row = \(row)")
+        }*/
         
     func touchDown(atPoint pos : CGPoint) {
         //                if let n = self.spinnyNode?.copy() as! SKShapeNode? {
@@ -766,12 +741,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func touchUp(atPoint pos : CGPoint) {
         //this creates a new node and we dont want that. we want to use the existing shootingMarbleNode
         shootMarble(atPoint: pos)
-        marbleCounter +=  1
-        print("Marble Counter : \(marbleCounter)")
-        if (marbleCounter >= 4){
-            //shiftDown()
-            marbleCounter = 0
-        }
+        
+        
+        //        if waitingToShoot {
+        //            //let shootingMarble = self.childNode(withName: ShootingCatagoryName) as! SKSpriteNode
+        //            let shootingMarble = self.childNode(withName: "redBall") as! SKSpriteNode
+        //
+        //            shootingMarble.physicsBody = SKPhysicsBody(circleOfRadius: marbleWidth/2, center: shootingMarble.position)
+        //            shootingMarble.physicsBody!.categoryBitMask = ShootingBallCategory
+        //
+        //
+        //            shootingMarble.physicsBody!.allowsRotation = false
+        //            shootingMarble.physicsBody!.friction = 0.0
+        //            shootingMarble.physicsBody!.affectedByGravity = false
+        //            //shootingMarble.physicsBody!.isDynamic = false
+        //            let x = (pos.x)
+        //            let y = (pos.y) - shootingPosition.y
+        //            let hypotenus = sqrt(x*x + y*y)
+        //            let xVector = (x/hypotenus)*150.0
+        //            let yVector = (y/hypotenus)*150.0
+        //            shootingMarble.physicsBody!.applyImpulse(CGVector(dx: xVector, dy: yVector))
+        //            //shootingMarble.position = pos
+        ////            shootingMarble.physicsBody!.velocity.dx = xVector
+        ////            shootingMarble.physicsBody!.velocity.dy = yVector
+        //            print("Shooting Marble Color: \(shootingMarble.texture)")
+        //        }
+        
+        
         
     }
     
@@ -788,7 +784,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let touch = touches.first
+        let touchLocation = touch!.location(in: self)
         
+        if let body = physicsWorld.body(at: touchLocation) {
+            if body.node!.name == PauseButtonCategoryName {
+                print("PauseButtonTouched")
+                gamePaused = true
+            }
+        }
         for t in touches { self.touchUp(atPoint: t.location(in: self)) }
     }
     
@@ -802,3 +806,101 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 }
 
+
+//Jons Code End
+    
+
+
+/*
+    func addSprites(for balls: Set<Ball>) {
+        for ball in balls {
+            let sprite = SKSpriteNode(imageNamed: ball.ballType.spriteName)
+
+            sprite.size = CGSize(width: TileWidth, height: TileHeight)
+            sprite.position = pointFor(column: ball.column, row: ball.row)
+            sprite.physicsBody?.categoryBitMask = UInt32(0x1 << 2)
+            sprite.physicsBody = SKPhysicsBody(circleOfRadius: sprite.size.width/2)
+            sprite.physicsBody?.affectedByGravity = false
+            sprite.physicsBody?.isDynamic = false
+            
+            ballsLayer.addChild(sprite)
+            
+            ball.sprite = sprite
+        }
+    }
+    
+    func pointFor(column: Int, row: Int) -> CGPoint {
+        return CGPoint(
+            x: CGFloat(column)*TileWidth + TileWidth, ///2,
+            y: CGFloat(row)*TileHeight + TileHeight)// /2)
+    }
+    
+    override func didMove(to view: SKView) {
+        var ballType = BallType.random()
+        ballToBeShot = Ball(column: 99, row: 99, ballType: ballType)
+        let ballToBeShotSprite = SKSpriteNode(imageNamed: ballToBeShot.ballType.spriteName)
+        ballToBeShotSprite.size = CGSize(width: TileWidth, height: TileHeight)
+        ballToBeShotSprite.position = CGPoint(x: -164, y:-513)
+        
+        ballToBeShot.sprite = ballToBeShotSprite
+
+        ballToBeShot.sprite?.physicsBody = SKPhysicsBody(texture: (ballToBeShot.sprite?.texture!)!, size: (ballToBeShot.sprite?.texture!.size())!)
+        ballToBeShot.sprite?.physicsBody?.usesPreciseCollisionDetection = true
+        
+        if(ballToBeShot.sprite?.physicsBody?.isResting)!{
+            ballToBeShot.sprite?.physicsBody?.allowsRotation = false
+        }
+        ballToBeShot.sprite?.physicsBody?.categoryBitMask = UInt32(0x1 << 1)
+        ballToBeShot.sprite?.physicsBody!.contactTestBitMask = UInt32(0x1 << 2)
+        ballToBeShot.sprite?.physicsBody = SKPhysicsBody(circleOfRadius: (ballToBeShot.sprite?.size.width)!/2)
+        ballToBeShot.sprite?.physicsBody?.affectedByGravity = false
+        gameLayer.addChild(ballToBeShot.sprite!)
+        
+        createSceneContents()
+    }
+
+    func createSceneContents() {
+        self.scaleMode = .aspectFit
+        self.physicsBody = SKPhysicsBody(edgeLoopFrom: self.frame)
+    }
+
+    
+    func touchDown(atPoint pos : CGPoint) {
+    }
+    
+    func touchMoved(toPoint pos : CGPoint) {
+    }
+    
+    func touchUp(atPoint pos : CGPoint) {
+        
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let touch = touches.first {
+            if (touch.tapCount == 1) {
+                tapQueue.append(1)
+            }
+            // Get the position that was touched.
+            let touchPosition = touch.location(in: self)
+    
+            let vector = CGVector(dx:touchPosition.x - (-164), dy:touchPosition.y - (-513))
+            ballToBeShot.sprite?.physicsBody?.applyImpulse(vector)
+            ballToBeShot.sprite?.physicsBody?.affectedByGravity = false
+            
+        }
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+    
+    
+    override func update(_ currentTime: TimeInterval) {
+        // Called before each frame is rendered
+    }
+}*/
